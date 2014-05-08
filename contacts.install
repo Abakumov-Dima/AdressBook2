@@ -1,0 +1,90 @@
+<?php
+
+/**
+ * Implements hook_install().
+ *
+ */
+function contacts_install() {
+    taxonomy_vocabulary_save((object) array(
+        'name' => t('Category'),
+        'machine_name' => 'category',
+        'description' => t('Category vocabulary of contacts module.'),
+        'module' => 'contacts',
+    ));
+
+    $voc = taxonomy_vocabulary_machine_name_load('category');
+    $terms = array('Family', 'Friends', 'Work');
+
+    foreach ($terms as $term) {
+        taxonomy_term_save((object) array(
+            'name' => $term,
+            'vid' => $voc->vid,
+        ));
+    }
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Drop table of module contacts.
+ * Delete vocabulary of module contacts.
+ */
+function contacts_uninstall() {
+    $voc = taxonomy_vocabulary_machine_name_load('category');
+    if ($voc) {
+        taxonomy_vocabulary_delete($voc->vid);
+    }
+}
+
+
+
+/**
+ * hook_schema().
+ */
+function contacts_schema() {
+    $schema['contacts'] = array(
+        'description' => 'Address book fields',
+        'fields' => array(
+            'cid' => array(
+                'description' => 'Contains Contacts IDs.',
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'title' => array(
+                'description' => 'Contains label for Contacts',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+            'uid' => array(
+                'description' => 'User ID for Contacts',
+                'type' => 'int',
+                'label' => 'User id',
+            ),
+        ),
+        'primary key' => array('cid'),
+    );
+
+    return $schema;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

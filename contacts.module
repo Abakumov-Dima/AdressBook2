@@ -1,0 +1,174 @@
+<?php
+
+/**
+ * @file
+ * Main file of the module.
+ */
+
+// Load CRUD functions.
+module_load_include('crud.inc', 'contacts');
+
+/**
+ * Implements hook_menu().
+ */
+function contacts_menu() {
+
+
+    return array(
+        'address-book/contact/%'=>array(
+            'description'=> t('page contact'),
+            'page callback'=>'contacts_page_view',
+            'page arguments'=> array(2),
+            'access callback' => 'contacts_access',
+            'access arguments'=> array(2),
+        ),
+
+    );
+}
+
+
+
+/**
+ * Implements hook_entity_info().
+ */
+function contacts_entity_info() {
+    return array(
+        'contacts' => array(
+            'label' => t('Contacts'),
+            'base table' => 'contacts',
+            'fieldable' => TRUE,
+            'entity keys' => array(
+                'id' => 'cid',
+                'label' => 'title',
+//        'bundle' => 'type',
+            ),
+            'bundles' => array(
+                'contacts' => array(
+                    'label' => t('Contacts'),
+                    'admin' => array(
+                        'path' => 'admin/content/contacts/structure',
+                        'access arguments' => array('administer site configuration'),
+                    ),
+                ),
+            ),
+
+            // Entity API-related parameters.
+            'controller class' => 'EntityAPIController',
+            'entity class' => 'Entity',
+            'admin ui' => array(
+                'path' => 'address-book',
+                'file' => 'contacts.admin.inc',
+            ),
+            'module' => 'contacts',
+            'access callback' => 'contacts_access',
+        ),
+    );
+}
+
+/**
+ * Access callback for Contacts entities.
+ *
+ * @param $op
+ * @param null $contacts
+ * @param null $account
+ * @return bool
+ */
+/*function contacts_access($op, $contacts = NULL, $account = NULL) {
+    return user_access('administer site configuration');
+}*/
+
+/**
+ * Page callback for "Contacts".
+ *
+ * @return string
+ */
+function contacts_page() {
+
+    // Load all entities.
+    $contacts = contacts_load_multiple(FALSE, array(
+        'title' => 'Title of contacts'
+    ));
+    $contacts = current($contacts);
+    $output = array();
+    if ($contacts) {
+
+        $contacts_wrapped = entity_metadata_wrapper('contacts', $contacts);
+
+        $output = $contacts_wrapped->view();
+    }
+
+
+    return $output;
+}
+
+
+
+
+/**
+ * views page
+ */
+function contacts_page_view($cid){
+
+    $contacts = contacts_load($cid);
+
+   // $contacts = current($contacts);
+    $output = array();
+    if ($contacts){
+        $contacts_wrapped = entity_metadata_wrapper('contacts', $contacts);
+        $output = $contacts_wrapped->view();
+
+
+    }
+    return $output;
+}
+
+function contacts_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+
+    if($form_state['step'] == 'views_form_views_form') {
+
+        $form['actions']['action::views_bulk_operations_delete_item'] = $form['select']['action::views_bulk_operations_delete_item'];
+        $form['select']['action::views_bulk_operations_delete_item']['#printed'] = TRUE;
+        $form['actions']['submit']['#access'] = FALSE;
+        $form['actions']['#access'] = TRUE;
+    }
+
+    if($form_state['step'] == 'views_bulk_operations_config_form') {
+        $form['parameter']['term']['settings']['term']['#type'] = 'select';
+        $vocab = taxonomy_vocabulary_machine_name_load('category');
+        $dropdown_source = taxonomy_get_tree($vocab->vid);
+        $dropdown_array = array();
+        foreach ($dropdown_source as $item) {
+            $key = $item->tid;
+            $value = $item->name;
+            $dropdown_array[$key] = $value;
+        }
+        $form['parameter']['term']['settings']['term']['#options'] = $dropdown_array;
+
+    }
+}
+
+function contacts_permission() {
+    return array(
+        'access method' => array(
+            'title' => t('contact module '),
+            'description' => t('contact module'),
+        ),
+    );
+}
+/**
+ * Access callback for Contact entities.
+ */
+function contacts_access() {
+    return user_access('access method');
+}
+
+
+function contacts_entity_property_info_alter(&$info) {
+    dsm($info);
+    $info['contacts']['properties']['uid'] = array(
+        'label' => 'Uid',
+        'type' => 'user',
+        'schema field' => 'uid',
+        'description' => 'Contacts "uid" property.'
+    );
+}
