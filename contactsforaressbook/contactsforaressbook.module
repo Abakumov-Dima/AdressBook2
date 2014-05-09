@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the contacts feature.
+ */
+
+include_once 'contactsforaressbook.features.inc';
