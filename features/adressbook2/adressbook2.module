@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the AdressBook2 feature.
+ */
+
+include_once 'adressbook2.features.inc';
